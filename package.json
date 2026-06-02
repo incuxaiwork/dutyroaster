@@ -1,0 +1,16 @@
+  {
+  "name": "drms",
+  "private": true,
+  "scripts": {
+    "seed": "npx prisma generate && npx prisma db push && ts-node prisma/seed.ts"
+  },
+  "devDependencies": {
+    "prisma": "^6.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.0.0",
+    "csv-parse": "^5.0.0"
+  }
+}
