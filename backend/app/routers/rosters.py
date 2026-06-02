@@ -29,17 +29,25 @@ def daily_roster(date: str, station: Optional[str] = None, db: Session = Depends
 
 @router.get("/history")
 def history(scope: str = "daily", db: Session = Depends(get_db)):
+    batches = db.query(RosterBatch).order_by(RosterBatch.created_at.desc()).limit(100).all()
+    batch_ids = [b.id for b in batches]
+    shifts_by_batch: dict[int, set[str]] = {}
+    if batch_ids:
+        for row in db.query(DutyAssignment.roster_batch_id, DutyAssignment.shift_type).filter(
+            DutyAssignment.roster_batch_id.in_(batch_ids)
+        ).distinct().all():
+            shifts_by_batch.setdefault(row[0], set()).add(row[1].value)
     return [
         {
             "id": batch.id,
             "date": batch.roster_date,
             "station": batch.station,
-            "shift_type": batch.shift_type,
+            "shift_type": batch.shift_type or ", ".join(sorted(shifts_by_batch.get(batch.id, []))) or None,
             "fairness_score": batch.fairness_score,
             "is_locked": batch.is_locked,
             "created_at": batch.created_at,
         }
-        for batch in db.query(RosterBatch).order_by(RosterBatch.created_at.desc()).limit(100).all()
+        for batch in batches
     ]
 
 
