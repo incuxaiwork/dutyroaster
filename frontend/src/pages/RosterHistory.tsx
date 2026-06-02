@@ -17,7 +17,7 @@ export function RosterHistory() {
   const columns = useMemo<ColumnDef<Row>[]>(() => [
     { accessorKey: "id",            header: "Batch" },
     { accessorKey: "date",          header: "Date" },
-    { accessorKey: "station",       header: "Station" },
+    // { accessorKey: "station",       header: "Station" },
     { accessorKey: "shift_type",    header: "Shift" },
     { accessorKey: "fairness_score",header: "Fairness" },
     { id: "locked", header: "Locked", cell: ({ row }) => row.original.is_locked ? "Yes" : "No" },
