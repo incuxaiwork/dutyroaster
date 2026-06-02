@@ -21,6 +21,7 @@ def dashboard(db: Session = Depends(get_db)):
     duties_today = db.query(func.count(Duty.id)).filter(Duty.start_date == today).scalar() or 0
     pending = db.query(func.count(Duty.id)).filter(Duty.status == DutyStatus.pending).scalar() or 0
     allocated = db.query(func.count(Duty.id)).filter(Duty.status == DutyStatus.allocated).scalar() or 0
+    in_progress = db.query(func.count(Duty.id)).filter(Duty.status == DutyStatus.in_progress).scalar() or 0
     completed = db.query(func.count(Duty.id)).filter(Duty.status == DutyStatus.completed).scalar() or 0
 
     week_start = today - timedelta(days=today.weekday())
@@ -36,8 +37,9 @@ def dashboard(db: Session = Depends(get_db)):
     shift = db.query(DutyAssignment.shift_type, func.sum(DutyAssignment.working_hours)).group_by(DutyAssignment.shift_type).all()
     station = db.query(Officer.station, func.count(DutyAssignment.id)).join(DutyAssignment, DutyAssignment.officer_id == Officer.id).group_by(Officer.station).all()
     rank = db.query(Officer.rank, func.count(DutyAssignment.id)).join(DutyAssignment, DutyAssignment.officer_id == Officer.id).group_by(Officer.rank).all()
-    duty_count = db.query(func.count(Duty.id)).scalar() or 0
-    covered = db.query(func.count(Duty.id)).filter(Duty.status.in_([DutyStatus.allocated, DutyStatus.completed])).scalar() or 0
+    active_statuses = [DutyStatus.pending, DutyStatus.allocated, DutyStatus.in_progress, DutyStatus.completed]
+    duty_count = db.query(func.count(Duty.id)).filter(Duty.status.in_(active_statuses)).scalar() or 0
+    covered = db.query(func.count(Duty.id)).filter(Duty.status.in_([DutyStatus.allocated, DutyStatus.in_progress, DutyStatus.completed])).scalar() or 0
     hours = [row.hours for row in weekly if row.hours > 0]
     fairness = max(0, round(100 - (max(hours) - min(hours) if len(hours) > 1 else 0), 2)) if hours else 0
 
@@ -49,6 +51,7 @@ def dashboard(db: Session = Depends(get_db)):
             "total_duties_today": duties_today,
             "pending_duties": pending,
             "allocated_duties": allocated,
+            "in_progress_duties": in_progress,
             "completed_duties": completed,
             "fairness_score": fairness,
             "duty_coverage_percentage": round((covered / duty_count) * 100, 2) if duty_count else 0,

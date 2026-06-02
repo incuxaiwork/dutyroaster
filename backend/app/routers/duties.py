@@ -7,8 +7,14 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import Duty, DutyStatus
+from pydantic import BaseModel
+
 from ..schemas import DutyIn
 from ..services.audit import audit
+
+
+class StatusUpdate(BaseModel):
+    status: str
 
 router = APIRouter(prefix="/api/duties", tags=["duties"])
 
@@ -69,6 +75,19 @@ def update_duty(duty_id: int, payload: DutyIn, db: Session = Depends(get_db)):
     for key, value in data.items():
         setattr(duty, key, value)
     audit(db, "edit_duty", "duty", duty.id, duty.duty_name)
+    db.commit()
+    db.refresh(duty)
+    return serialize(duty)
+
+
+@router.patch("/{duty_id}/status")
+def update_duty_status(duty_id: int, payload: StatusUpdate, db: Session = Depends(get_db)):
+    duty = db.get(Duty, duty_id)
+    if not duty:
+        raise HTTPException(status_code=404, detail="Duty not found")
+    old_status = duty.status
+    duty.status = payload.status
+    audit(db, "change_status", "duty", duty.id, f"{old_status} → {payload.status}")
     db.commit()
     db.refresh(duty)
     return serialize(duty)

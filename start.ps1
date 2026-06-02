@@ -35,13 +35,16 @@ if (-not (Test-Path $venvActivate)) {
     Write-Host "[OK] Virtual environment created." -ForegroundColor Green
 }
 
-Write-Host "[..] Installing/updating Python dependencies..." -ForegroundColor Yellow
-& $venvPip install -r "$root\backend\requirements.txt" --upgrade
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERR] Failed to install Python dependencies." -ForegroundColor Red
-    exit 1
+# Only install if not already done
+if (-not (Test-Path "$venv\Lib\site-packages\fastapi")) {
+    Write-Host "[..] Installing Python dependencies..." -ForegroundColor Yellow
+    & $venvPip install -r "$root\backend\requirements.txt"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERR] Failed to install Python dependencies." -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "[OK] Python dependencies installed." -ForegroundColor Green
 }
-Write-Host "[OK] Python dependencies installed." -ForegroundColor Green
 
 # -- Frontend: npm deps --
 if (-not (Test-Path "$root\frontend\node_modules")) {

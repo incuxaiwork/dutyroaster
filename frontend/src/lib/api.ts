@@ -35,6 +35,7 @@ export const api = {
   duties: () => request<Duty[]>("/api/duties"),
   createDuty: (payload: Partial<Duty>) => request<Duty>("/api/duties", { method: "POST", body: JSON.stringify(payload) }),
   updateDuty: (id: number, payload: Partial<Duty>) => request<Duty>(`/api/duties/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  updateDutyStatus: (id: number, status: string) => request<Duty>(`/api/duties/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
   deleteDuty: (id: number) => request(`/api/duties/${id}`, { method: "DELETE" }),
   generateRoster: (payload: { date: string; station?: string; shift?: string; duty_ids?: number[] }) =>
     request<{ batch_id: number; fairness_score: number; assigned_count: number; unfilled: unknown[]; assignments: Assignment[] }>("/api/rosters/generate", {

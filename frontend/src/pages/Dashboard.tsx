@@ -77,10 +77,10 @@ export function Dashboard() {
       </div>
 
       {/* ── Main charts ─────────────────────────────────────── */}
-      <div className="grid gap-5 xl:grid-cols-2">
+      {/* <div className="grid gap-5 xl:grid-cols-2">
         <BarCard title="Weekly Working Hours"  data={data.weekly_hours}  xKey="name" yKey="hours" color="#ea580c" />
         <BarCard title="Monthly Working Hours" data={data.monthly_hours} xKey="name" yKey="hours" color="#fb923c" />
-      </div>
+      </div> */}
 
       {/* ── Deployment charts ───────────────────────────────── */}
       <div className="grid gap-5 xl:grid-cols-3">
@@ -90,9 +90,9 @@ export function Dashboard() {
         {/* Pie chart */}
         <Card>
           <CardHeader><CardTitle>Shift-wise Hours</CardTitle></CardHeader>
-          <CardContent className="h-64">
+          <CardContent className="h-72 overflow-visible">
             {data.shift_breakdown.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" className="overflow-visible">
                 <PieChart>
                   <Pie
                     data={data.shift_breakdown}
@@ -101,8 +101,19 @@ export function Dashboard() {
                     outerRadius={80}
                     innerRadius={36}
                     paddingAngle={3}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    labelLine={false}
+                    label={({ cx, cy, midAngle, outerRadius, percent, name }) => {
+                      const RAD = Math.PI / 180;
+                      const radius = outerRadius + 18;
+                      const x = cx + radius * Math.cos(-midAngle * RAD);
+                      const y = cy + radius * Math.sin(-midAngle * RAD);
+                      return (
+                        <text x={x} y={y} textAnchor={x > cx ? "start" : "end"} dominantBaseline="central"
+                          className="text-xs fill-stone-600" fontSize={12}>
+                          {name} ({(percent * 100).toFixed(0)}%)
+                        </text>
+                      );
+                    }}
+                    labelLine={{ stroke: "#a8a29e", strokeWidth: 1 }}
                   >
                     {data.shift_breakdown.map((_, i) => (
                       <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
@@ -120,12 +131,12 @@ export function Dashboard() {
       </div>
 
       {/* ── Utilization tables ──────────────────────────────── */}
-      {(data.most_utilized.length > 0 || data.least_utilized.length > 0) && (
+      {/* {(data.most_utilized.length > 0 || data.least_utilized.length > 0) && (
         <div className="grid gap-5 xl:grid-cols-2">
           <UtilTable title={<><TrendingUp className="h-4 w-4 text-rose-500" /> Most Utilized</>} rows={data.most_utilized}  accent="text-rose-600 bg-rose-50" />
           <UtilTable title={<><TrendingDown className="h-4 w-4 text-sky-500" /> Least Utilized</>} rows={data.least_utilized} accent="text-sky-600 bg-sky-50" />
         </div>
-      )}
+      )} */}
 
       {/* ── Overtime & under-utilization alerts ─────────────── */}
       {data.overtime.length > 0 && (

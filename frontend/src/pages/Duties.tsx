@@ -1,5 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { CheckSquare, Eye, Loader2, Pencil, Plus, Shuffle, Trash2, X } from "lucide-react";
+import { CheckSquare, Eye, Loader2, Pencil, Plus, Shuffle, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { DataTable } from "../components/DataTable";
 import { Button } from "../components/ui/button";
@@ -139,6 +139,14 @@ export function Duties() {
     } catch (err) { setError(String(err)); }
   }
 
+  /* ── status transition ── */
+  async function changeStatus(id: number, status: string) {
+    try {
+      await api.updateDutyStatus(id, status);
+      load();
+    } catch (err) { setError(String(err)); }
+  }
+
   /* ── delete ── */
   function deleteDuty(id: number) {
     setDuties((prev) => prev.filter((d) => d.id !== id));
@@ -198,14 +206,6 @@ export function Duties() {
       ),
     },
     {
-      id: "status", header: "Status",
-      cell: ({ row }) => (
-        <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[row.original.status] ?? "bg-gray-100 text-gray-600"}`}>
-          {row.original.status}
-        </span>
-      ),
-    },
-    {
       id: "edit", header: "",
       cell: ({ row }) => (
         <Button size="sm" variant="ghost" title="Edit duty" onClick={() => openEdit(row.original)}>
@@ -214,12 +214,42 @@ export function Duties() {
       ),
     },
     {
-      id: "actions", header: "",
-      cell: ({ row }) => (
-        <Button size="sm" variant="ghost" title="Delete duty" onClick={() => deleteDuty(row.original.id)}>
-          <Trash2 className="h-4 w-4 text-red-400" />
-        </Button>
-      ),
+      id: "status", header: "Status",
+      cell: ({ row }) => {
+        const s = row.original.status;
+        const isOngoing = s === "Pending Allocation" || s === "Allocated" || s === "In Progress";
+        const isCompleted = s === "Completed";
+        const isCancelled = s === "Cancelled";
+
+        if (isCancelled) {
+          return (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-600">
+              <X className="h-3 w-3" /> Cancelled
+            </span>
+          );
+        }
+
+        return (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => changeStatus(row.original.id, isCompleted ? "In Progress" : "Completed")}
+              className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors
+                ${isCompleted ? "bg-green-500" : isOngoing ? "bg-violet-400" : "bg-stone-300"}
+                ${isCancelled ? "cursor-default opacity-50" : "cursor-pointer"}`}
+            >
+              <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform
+                ${isCompleted ? "translate-x-[18px]" : "translate-x-[3px]"}`} />
+            </button>
+            <span
+              className={`text-xs font-medium cursor-pointer hover:underline ${isCompleted ? "text-green-600" : isOngoing ? "text-violet-600" : "text-stone-400"}`}
+              onClick={() => changeStatus(row.original.id, isCompleted ? "In Progress" : "Completed")}
+            >
+              {isCompleted ? "Completed" : isOngoing ? "Ongoing" : s}
+            </span>
+          </div>
+        );
+      },
     },
   ], [duties, selectedIds, allSelected]);
 
