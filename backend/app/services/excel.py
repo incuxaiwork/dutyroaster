@@ -56,30 +56,83 @@ def officer_template() -> BytesIO:
     return out
 
 
+COLUMN_ALIASES = {
+    "name": ["Name", "name"],
+    "belt": ["Belt Number / Employee ID", "belt_number", "G.No", "G.No.", "gno", "Employee ID"],
+    "rank": ["Rank", "rank"],
+    "station": ["Station", "station", "Nature of duty"],
+    "mobile": ["Mobile Number", "mobile_number", "Cell No.", "Cell No", "cellNo"],
+    "gender": ["Gender", "gender"],
+    "department": ["Department/Unit", "department_unit", "Nature of duty"],
+    "joining_date": ["Joining Date", "joining_date"],
+    "availability": ["Availability Status", "availability_status"],
+    "skills": ["Skills", "skills"],
+}
+
+
+def _col(row: dict, aliases: list[str]) -> str:
+    for a in aliases:
+        val = row.get(a)
+        if val is not None and str(val).strip():
+            return str(val).strip()
+    return ""
+
+
+KNOWN_HEADERS = {"s.no.", "rank", "g.no", "name", "belt number", "belt"}
+
+
+def _find_header_row(df_raw: pd.DataFrame) -> int:
+    for i in range(min(10, len(df_raw))):
+        row_vals = [str(v).strip().lower() for v in df_raw.iloc[i].values if pd.notna(v)]
+        match_count = sum(1 for h in KNOWN_HEADERS if h in row_vals)
+        if match_count >= 2:
+            return i
+    return 0
+
+
 def import_officers(db: Session, filename: str, content: bytes, actor_id: Optional[int] = None) -> int:
-    df = pd.read_excel(BytesIO(content)).fillna("")
+    if filename and filename.lower().endswith(".csv"):
+        df = pd.read_csv(BytesIO(content)).fillna("")
+    else:
+        buf = BytesIO(content)
+        df_raw = pd.read_excel(buf, engine="openpyxl", header=None)
+        header_row = _find_header_row(df_raw)
+        df = pd.read_excel(BytesIO(content), engine="openpyxl", header=header_row).fillna("")
+    df.columns = [str(c).strip() for c in df.columns]
+    rows = df.to_dict(orient="records")
     count = 0
-    for _, row in df.iterrows():
-        belt = str(row.get("Belt Number / Employee ID", "")).strip()
+    belt_counts: dict[str, int] = {}
+    for row in rows:
+        belt = _col(row, COLUMN_ALIASES["belt"])
+        if not belt or belt == "-":
+            serial = _col(row, ["S.No.", "S.No", "s_no", "serial", "Serial No."])
+            belt = f"unknown-{serial}" if serial else ""
         if not belt:
             continue
+        dup = belt_counts.get(belt, 0)
+        if dup > 0:
+            belt = f"{belt}-{dup}"
+        belt_counts[belt] = dup + 1
         officer = db.query(Officer).filter(Officer.belt_number == belt).first()
         if not officer:
             officer = Officer(belt_number=belt, name="", rank="", station="")
             db.add(officer)
-        officer.name = str(row.get("Name", "")).strip()
-        officer.rank = str(row.get("Rank", "")).strip()
-        officer.station = str(row.get("Station", "")).strip()
-        officer.mobile_number = str(row.get("Mobile Number", "")).strip() or None
-        officer.gender = str(row.get("Gender", "")).strip() or None
-        officer.department_unit = str(row.get("Department/Unit", "")).strip() or None
-        if str(row.get("Joining Date", "")).strip():
-            officer.joining_date = pd.to_datetime(row.get("Joining Date")).date()
-        if str(row.get("Availability Status", "")).strip():
-            officer.availability_status = str(row.get("Availability Status")).strip()
+        officer.name = _col(row, COLUMN_ALIASES["name"])
+        officer.rank = _col(row, COLUMN_ALIASES["rank"])
+        officer.station = _col(row, COLUMN_ALIASES["station"])
+        officer.mobile_number = _col(row, COLUMN_ALIASES["mobile"]) or None
+        officer.gender = _col(row, COLUMN_ALIASES["gender"]) or None
+        officer.department_unit = _col(row, COLUMN_ALIASES["department"]) or None
+        jd = _col(row, COLUMN_ALIASES["joining_date"])
+        if jd:
+            officer.joining_date = pd.to_datetime(jd).date()
+        av = _col(row, COLUMN_ALIASES["availability"])
+        if av:
+            officer.availability_status = av
+        skills_str = _col(row, COLUMN_ALIASES["skills"])
         officer.skills = [
             get_or_create_skill(db, skill)
-            for skill in str(row.get("Skills", "")).split(",")
+            for skill in skills_str.split(",")
             if skill.strip()
         ]
         count += 1

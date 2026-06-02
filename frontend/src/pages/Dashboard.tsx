@@ -5,7 +5,7 @@ import {
 } from "recharts";
 import {
   Activity, AlertTriangle, BarChart3, CalendarCheck,
-  Shield, TrendingUp, Users, Zap,
+  Shield, TrendingDown, TrendingUp, Users, Zap,
 } from "lucide-react";
 import { api } from "../lib/api";
 import type { DashboardAnalytics } from "../types/domain";
@@ -122,8 +122,8 @@ export function Dashboard() {
       {/* ── Utilization tables ──────────────────────────────── */}
       {(data.most_utilized.length > 0 || data.least_utilized.length > 0) && (
         <div className="grid gap-5 xl:grid-cols-2">
-          <UtilTable title="🔥 Most Utilized" rows={data.most_utilized}  accent="text-rose-600 bg-rose-50" />
-          <UtilTable title="💤 Least Utilized" rows={data.least_utilized} accent="text-sky-600 bg-sky-50" />
+          <UtilTable title={<><TrendingUp className="h-4 w-4 text-rose-500" /> Most Utilized</>} rows={data.most_utilized}  accent="text-rose-600 bg-rose-50" />
+          <UtilTable title={<><TrendingDown className="h-4 w-4 text-sky-500" /> Least Utilized</>} rows={data.least_utilized} accent="text-sky-600 bg-sky-50" />
         </div>
       )}
 
@@ -178,10 +178,10 @@ function BarCard({ title, data, xKey, yKey, color }: {
   );
 }
 
-function UtilTable({ title, rows, accent }: { title: string; rows: { name: string; hours: number }[]; accent: string }) {
+function UtilTable({ title, rows, accent }: { title: React.ReactNode; rows: { name: string; hours: number }[]; accent: string }) {
   return (
     <Card>
-      <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="flex items-center gap-2">{title}</CardTitle></CardHeader>
       <CardContent className="p-0">
         {rows.map((r, i) => (
           <div key={r.name} className={`flex items-center justify-between px-5 py-3 ${i < rows.length - 1 ? "border-b border-border" : ""}`}>

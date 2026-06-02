@@ -1,78 +1,65 @@
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Write-Host "=== Starting DRMS ===" -ForegroundColor Cyan
 
-# ── Check Python ──
+# -- Check Python --
 try {
     $pyVersion = & python --version
-    Write-Host "[✓] Python: $pyVersion" -ForegroundColor Green
+    Write-Host "[OK] Python: $pyVersion" -ForegroundColor Green
 } catch {
-    Write-Host "[✗] Python not found. Please install Python 3.10+ from https://python.org" -ForegroundColor Red
+    Write-Host "[ERR] Python not found. Please install Python 3.10+ from https://python.org" -ForegroundColor Red
     exit 1
 }
 
-# ── Check Node.js ──
+# -- Check Node.js --
 try {
     $nodeVer = & node --version
     $npmVer  = & npm --version
-    Write-Host "[✓] Node: $nodeVer  npm: $npmVer" -ForegroundColor Green
+    Write-Host "[OK] Node: $nodeVer  npm: $npmVer" -ForegroundColor Green
 } catch {
-    Write-Host "[✗] Node.js not found. Please install Node.js 18+ from https://nodejs.org" -ForegroundColor Red
+    Write-Host "[ERR] Node.js not found. Please install Node.js 18+ from https://nodejs.org" -ForegroundColor Red
     exit 1
 }
 
-# ── Backend: venv + deps ──
+# -- Backend: venv + deps --
 $venv = "$root\backend\.venv"
 $venvActivate = "$venv\Scripts\Activate.ps1"
 $venvPython   = "$venv\Scripts\python.exe"
 $venvPip      = "$venv\Scripts\pip.exe"
-
 if (-not (Test-Path $venvActivate)) {
-    Write-Host "[*] Creating Python virtual environment..." -ForegroundColor Yellow
+    Write-Host "[..] Creating Python virtual environment..." -ForegroundColor Yellow
     python -m venv "$venv"
     if (-not (Test-Path $venvActivate)) {
-        Write-Host "[✗] Failed to create virtual environment." -ForegroundColor Red
+        Write-Host "[ERR] Failed to create virtual environment." -ForegroundColor Red
         exit 1
     }
-    Write-Host "[✓] Virtual environment created." -ForegroundColor Green
+    Write-Host "[OK] Virtual environment created." -ForegroundColor Green
 }
 
-Write-Host "[*] Installing/updating Python dependencies..." -ForegroundColor Yellow
-& $venvPip install -r "$root\backend\requirements.txt"
+Write-Host "[..] Installing/updating Python dependencies..." -ForegroundColor Yellow
+& $venvPip install -r "$root\backend\requirements.txt" --upgrade
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "[✗] Failed to install Python dependencies." -ForegroundColor Red
+    Write-Host "[ERR] Failed to install Python dependencies." -ForegroundColor Red
     exit 1
 }
-Write-Host "[✓] Python dependencies installed." -ForegroundColor Green
+Write-Host "[OK] Python dependencies installed." -ForegroundColor Green
 
-# ── Import CSV officers if DB missing ──
-$backendDb = "$root\backend\drms.db"
-if (-not (Test-Path $backendDb)) {
-    Write-Host "[*] Importing 425 officers from CSV..." -ForegroundColor Yellow
-    & $venvPython "$root\backend\import_csv.py"
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[✗] CSV import failed." -ForegroundColor Red
-        exit 1
-    }
-    Write-Host "[✓] Import complete." -ForegroundColor Green
-}
-
-# ── Frontend: npm deps ──
+# -- Frontend: npm deps --
 if (-not (Test-Path "$root\frontend\node_modules")) {
-    Write-Host "[*] Installing frontend dependencies..." -ForegroundColor Yellow
+    Write-Host "[..] Installing frontend dependencies..." -ForegroundColor Yellow
     & npm install --prefix "$root\frontend"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[✗] Failed to install frontend dependencies." -ForegroundColor Red
+        Write-Host "[ERR] Failed to install frontend dependencies." -ForegroundColor Red
         exit 1
     }
-    Write-Host "[✓] Frontend dependencies installed." -ForegroundColor Green
+    Write-Host "[OK] Frontend dependencies installed." -ForegroundColor Green
 }
 
-# ── Start backend ──
+# -- Start backend --
 Write-Host "[1/3] Starting backend (uvicorn)..." -ForegroundColor Yellow
 $backendCmd = "Set-Location '$root\backend'; & '$venvActivate'; uvicorn app.main:app --reload --port 8000"
 Start-Process -WindowStyle Normal -FilePath "powershell" -ArgumentList "-NoExit", "-Command", $backendCmd
 
-# ── Start frontend ──
+# -- Start frontend --
 Write-Host "[2/3] Starting frontend (Vite)..." -ForegroundColor Yellow
 $frontendCmd = "Set-Location '$root\frontend'; npm run dev"
 Start-Process -WindowStyle Normal -FilePath "powershell" -ArgumentList "-NoExit", "-Command", $frontendCmd

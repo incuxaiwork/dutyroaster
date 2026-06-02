@@ -1,4 +1,4 @@
-import { CheckCircle, Download, FileSpreadsheet, ListChecks, Upload } from "lucide-react";
+import { CheckCircle, Download, Loader2, ListChecks, Upload } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -26,11 +26,13 @@ const COLUMNS = [
 export function ExcelUpload() {
   const [imported, setImported] = useState<number | null>(null);
   const [error, setError]       = useState("");
+  const [loading, setLoading]   = useState(false);
 
   async function upload(file?: File) {
     if (!file) return;
     setImported(null);
     setError("");
+    setLoading(true);
     try {
       const form = new FormData();
       form.append("file", file);
@@ -38,6 +40,8 @@ export function ExcelUpload() {
       setImported(result.imported);
     } catch (err) {
       setError(`Upload failed: ${err}`);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -106,10 +110,10 @@ export function ExcelUpload() {
                 <Download className="h-4 w-4" /> Download Template (5 sample rows)
               </Button>
             </a>
-            <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg bg-orange-600 px-4 text-sm font-medium text-white hover:bg-orange-700 transition-colors">
-              <Upload className="h-4 w-4" />
-              Upload Excel
-              <input className="hidden" type="file" accept=".xlsx,.xls" onChange={(e) => upload(e.target.files?.[0])} />
+            <label className={`inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg px-4 text-sm font-medium text-white transition-colors ${loading ? "bg-orange-400 pointer-events-none" : "bg-orange-600 hover:bg-orange-700"}`}>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {loading ? "Importing..." : "Upload Excel"}
+              <input className="hidden" type="file" accept=".xlsx,.xls,.csv" disabled={loading} onChange={(e) => upload(e.target.files?.[0])} />
             </label>
           </div>
 

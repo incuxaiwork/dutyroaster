@@ -31,10 +31,11 @@ app = FastAPI(title="Police Duty Roster Management System", version="1.0.0", lif
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in settings.cors_origins.split(",")],
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=0,
 )
 
 app.include_router(auth.router)

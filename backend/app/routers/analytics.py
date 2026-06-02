@@ -38,8 +38,8 @@ def dashboard(db: Session = Depends(get_db)):
     rank = db.query(Officer.rank, func.count(DutyAssignment.id)).join(DutyAssignment, DutyAssignment.officer_id == Officer.id).group_by(Officer.rank).all()
     duty_count = db.query(func.count(Duty.id)).scalar() or 0
     covered = db.query(func.count(Duty.id)).filter(Duty.status.in_([DutyStatus.allocated, DutyStatus.completed])).scalar() or 0
-    hours = [row.hours for row in weekly]
-    fairness = max(0, round(100 - (max(hours) - min(hours) if len(hours) > 1 else 0), 2)) if hours else 100
+    hours = [row.hours for row in weekly if row.hours > 0]
+    fairness = max(0, round(100 - (max(hours) - min(hours) if len(hours) > 1 else 0), 2)) if hours else 0
 
     return {
         "cards": {
