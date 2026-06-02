@@ -59,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setToken(null);
     setUser(null);
+    window.location.hash = "";
   };
 
   return (

@@ -20,6 +20,7 @@ export function DailyRoster() {
     { accessorKey: "location",        header: "Location" },
     { accessorKey: "officer_name",    header: "Officer" },
     { accessorKey: "belt_number",     header: "Belt" },
+    { accessorKey: "station",         header: "Station" },
     { accessorKey: "shift_type",      header: "Shift" },
     { accessorKey: "start_time",      header: "Start" },
     { accessorKey: "end_time",        header: "End" },

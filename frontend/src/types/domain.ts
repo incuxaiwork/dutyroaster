@@ -55,6 +55,7 @@ export type Assignment = {
   is_locked: boolean;
   officer_name?: string;
   belt_number?: string;
+  station?: string;
   duty_name?: string;
   location?: string;
 };

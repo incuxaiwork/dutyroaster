@@ -16,7 +16,7 @@ from ..models import Duty, DutyAssignment
 router = APIRouter(prefix="/api/reports", tags=["reports"])
 
 
-COLUMNS = ["Date", "Duty", "Location", "Officer", "Belt Number", "Rank", "Shift", "Start", "End", "Hours"]
+COLUMNS = ["Date", "Duty", "Duty Type", "Location", "Officer", "Belt Number", "Rank", "Station", "Shift", "Start", "End", "Hours", "Duty End Date"]
 
 
 def assignment_rows(db: Session, date: Optional[str] = None):
@@ -47,14 +47,17 @@ def assignment_rows(db: Session, date: Optional[str] = None):
         rows.append({
             "Date": item.assignment_date,
             "Duty": duty_name,
+            "Duty Type": item.duty.duty_type,
             "Location": item.duty.location,
             "Officer": item.officer.name,
             "Belt Number": item.officer.belt_number,
             "Rank": item.officer.rank,
+            "Station": item.officer.station,
             "Shift": item.shift_type.value,
             "Start": item.start_time,
             "End": item.end_time,
             "Hours": item.working_hours,
+            "Duty End Date": item.duty.end_date,
         })
 
         prev_date = item.assignment_date

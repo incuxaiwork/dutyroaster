@@ -54,6 +54,7 @@ def assignment_view(assignment: DutyAssignment) -> dict:
         "is_locked": assignment.is_locked,
         "officer_name": assignment.officer.name if assignment.officer else None,
         "belt_number": assignment.officer.belt_number if assignment.officer else None,
+        "station": assignment.officer.station if assignment.officer else None,
         "duty_name": assignment.duty.duty_name if assignment.duty else None,
         "location": assignment.duty.location if assignment.duty else None,
     }
