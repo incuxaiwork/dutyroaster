@@ -16,7 +16,6 @@ const PIE_COLORS = ["#ea580c", "#fb923c", "#fed7aa", "#c2410c"];
 const STAT_CARDS = [
   { key: "total_officers",           label: "Total Officers",   icon: Users,         color: "from-orange-500 to-orange-600", bg: "bg-orange-50",  text: "text-orange-600" },
   { key: "available_officers",       label: "Available",        icon: Shield,         color: "from-green-500 to-green-600",  bg: "bg-green-50",   text: "text-green-600" },
-  { key: "officers_on_leave",        label: "On Leave",         icon: Activity,       color: "from-amber-500 to-amber-600",  bg: "bg-amber-50",   text: "text-amber-600" },
   { key: "total_duties_today",       label: "Duties Today",     icon: CalendarCheck,  color: "from-orange-400 to-orange-500",bg: "bg-orange-50",  text: "text-orange-500" },
   { key: "pending_duties",           label: "Pending",          icon: AlertTriangle,  color: "from-red-500 to-red-600",      bg: "bg-red-50",     text: "text-red-600" },
   { key: "allocated_duties",         label: "Allocated",        icon: Zap,            color: "from-orange-600 to-red-600",   bg: "bg-orange-50",  text: "text-orange-700" },
@@ -52,7 +51,7 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       {/* ── Stat cards ──────────────────────────────────────── */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         {STAT_CARDS.map(({ key, label, icon: Icon, color, bg, text }) => (
           <Card key={key} className="overflow-hidden">
             <CardContent className="p-0">
@@ -108,7 +107,7 @@ export function Dashboard() {
                       const y = cy + radius * Math.sin(-midAngle * RAD);
                       return (
                         <text x={x} y={y} textAnchor={x > cx ? "start" : "end"} dominantBaseline="central"
-                          className="text-xs fill-stone-600" fontSize={12}>
+                          className="text-xs fill-stone-600" fontSize={20}>
                           {name} ({(percent * 100).toFixed(0)}%)
                         </text>
                       );

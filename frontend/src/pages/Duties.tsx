@@ -194,7 +194,7 @@ export function Duties() {
       id: "incharge",
       header: "In-charge",
       cell: ({ row }) => row.original.incharge_officer_name
-        ? <span className="font-medium text-orange-700">{row.original.incharge_officer_name}</span>
+        ? <span className="font-medium text-orange-700">{row.original.incharge_officer_name} <span className="text-stone-400 font-normal">{row.original.incharge_officer_rank} ({row.original.incharge_officer_belt})</span></span>
         : <span className="text-stone-300">—</span>,
     },
     {
@@ -425,7 +425,7 @@ export function Duties() {
                     <span className={form.incharge_officer_id ? "" : "text-stone-400"}>
                       {form.incharge_officer_id
                         ? officers.find((o) => o.id === Number(form.incharge_officer_id))
-                          ? `${officers.find((o) => o.id === Number(form.incharge_officer_id))!.name} — ${officers.find((o) => o.id === Number(form.incharge_officer_id))!.rank}`
+                          ? `${officers.find((o) => o.id === Number(form.incharge_officer_id))!.name} — ${officers.find((o) => o.id === Number(form.incharge_officer_id))!.rank} (${officers.find((o) => o.id === Number(form.incharge_officer_id))!.belt_number})`
                           : "Select officer…"
                         : "Select officer…"}
                     </span>

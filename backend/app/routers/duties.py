@@ -38,6 +38,8 @@ def serialize(duty: Duty) -> dict:
         "status": duty.status,
         "incharge_officer_id": duty.incharge_officer_id,
         "incharge_officer_name": duty.incharge_officer.name if duty.incharge_officer else None,
+        "incharge_officer_rank": duty.incharge_officer.rank if duty.incharge_officer else None,
+        "incharge_officer_belt": duty.incharge_officer.belt_number if duty.incharge_officer else None,
         "created_at": duty.created_at,
     }
 

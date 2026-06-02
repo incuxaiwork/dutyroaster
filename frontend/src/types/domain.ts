@@ -39,6 +39,8 @@ export type Duty = {
   status: DutyStatus;
   incharge_officer_id?: number | null;
   incharge_officer_name?: string | null;
+  incharge_officer_rank?: string | null;
+  incharge_officer_belt?: string | null;
   created_at?: string;
 };
 
