@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String   @unique
+  password_hash String
+  role          String   @default("Viewer")
+  station_scope String?
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+}
+
+model Officer {
+  id                  Int      @id @default(autoincrement())
+  name                String
+  belt_number         String   @unique
+  rank                String
+  station             String
+  mobile_number       String?
+  gender              String?
+  department_unit     String?
+  joining_date        String?
+  availability_status String   @default("Available")
+  is_active           Boolean  @default(true)
+  skills              OfficerSkill[]
+  assignments         DutyAssignment[]
+  availability_records OfficerAvailability[]
+  incharge_duties     Duty[]
+}
+
+model Skill {
+  id       Int            @id @default(autoincrement())
+  name     String         @unique
+  officers OfficerSkill[]
+}
+
+model OfficerSkill {
+  officer_id Int
+  skill_id   Int
+  officer    Officer @relation(fields: [officer_id], references: [id], onDelete: Cascade)
+  skill      Skill   @relation(fields: [skill_id], references: [id], onDelete: Cascade)
+  @@id([officer_id, skill_id])
+}
+
+model Duty {
+  id                  Int               @id @default(autoincrement())
+  duty_name           String
+  duty_type           String
+  location            String?
+  start_date          String
+  end_date            String?
+  start_time          String
+  end_time            String
+  shift_type          String
+  required_officers   Int               @default(1)
+  required_rank       String?
+  required_skills     String?
+  priority_level      String            @default("Medium")
+  special_instructions String?
+  status              String            @default("Pending Allocation")
+  incharge_officer_id Int?
+  created_by          Int?
+  created_at          DateTime          @default(now())
+  incharge_officer    Officer?          @relation(fields: [incharge_officer_id], references: [id], onDelete: SetNull)
+  assignments         DutyAssignment[]
+}
+
+model RosterBatch {
+  id             Int              @id @default(autoincrement())
+  roster_date    String
+  station        String?
+  shift_type     String?
+  generated_by   Int?
+  is_locked      Boolean          @default(false)
+  fairness_score Float            @default(0)
+  created_at     DateTime         @default(now())
+  assignments    DutyAssignment[]
+  history        RosterHistory[]
+}
+
+model DutyAssignment {
+  id              Int      @id @default(autoincrement())
+  duty_id         Int
+  officer_id      Int
+  roster_batch_id Int?
+  assignment_date String
+  start_time      String
+  end_time        String
+  shift_type      String
+  working_hours   Float
+  is_locked       Boolean  @default(false)
+  created_at      DateTime @default(now())
+  duty            Duty     @relation(fields: [duty_id], references: [id], onDelete: Cascade)
+  officer         Officer  @relation(fields: [officer_id], references: [id])
+  roster_batch    RosterBatch? @relation(fields: [roster_batch_id], references: [id])
+
+  @@unique([officer_id, assignment_date, shift_type])
+  @@unique([officer_id, duty_id])
+}
+
+model OfficerAvailability {
+  id          Int      @id @default(autoincrement())
+  officer_id  Int
+  status      String
+  start_date  String
+  end_date    String
+  reason      String?
+  created_by  Int?
+  officer     Officer  @relation(fields: [officer_id], references: [id], onDelete: Cascade)
+}
+
+model RosterHistory {
+  id             Int         @id @default(autoincrement())
+  roster_batch_id Int
+  action         String
+  details        String?
+  created_at     DateTime    @default(now())
+  roster_batch   RosterBatch @relation(fields: [roster_batch_id], references: [id])
+}
+
+model UploadedFile {
+  id          Int      @id @default(autoincrement())
+  filename    String
+  file_type   String
+  row_count   Int      @default(0)
+  uploaded_by Int?
+  uploaded_at DateTime @default(now())
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  actor_id    Int?
+  action      String
+  entity_type String
+  entity_id   Int?
+  details     String?
+  created_at  DateTime @default(now())
+}
